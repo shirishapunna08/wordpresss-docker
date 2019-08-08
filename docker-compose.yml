@@ -1,57 +1,28 @@
-version: '2'
-volumes:
-  wordpress-db:
-  wordpress-data:
+version: '3.3'
 
 services:
-  mariadb:
-    image: amd64/mariadb:10.2
-    environment:
-      MYSQL_DATABASE: wordpress
-      MYSQL_PASSWORD: Chang3M3
-      MYSQL_ROOT_PASSWORD: Change3M34ls0
-      MYSQL_USER: wordpress
-    volumes:
-    - wordpress-db:/var/lib/mysql
+   db:
+     image: mysql:5.7
+     volumes:
+       - db_data:/var/lib/mysql
+     restart: always
+     environment:
+       MYSQL_ROOT_PASSWORD: somewordpress
+       MYSQL_DATABASE: wordpress
+       MYSQL_USER: wordpress
+       MYSQL_PASSWORD: wordpress
 
-  memcached:
-    image: amd64/memcached:1.5
-
-  nginx:
-    build: nginx/
-    image: fjudith/wordpress:nginx
-    ports:
-    - 32716:443/tcp
-    - 32715:80/tcp
-    links:
-    - memcached:memcached
-    - wordpress:wordpress
-    volumes:
-    - wordpress-data:/var/www/html:rw
-
-  wordpress:
-    build: php7-fpm/
-    image: fjudith/wordpress:php7-fpm
-    environment:
-      WORDPRESS_DB_HOST: mariadb
-      WORDPRESS_DB_NAME: wordpress
-      WORDPRESS_DB_USER: wordpress
-      WORDPRESS_DB_PASSWORD: Chang3M3
-    links:
-    - memcached:memcached
-    - mariadb:mysql
-    volumes:
-    - wordpress-data:/var/www/html
-
-  cli:
-    build: cli/
-    image: fjudith/wordpress:cli
-    stdin_open: true
-    tty: true
-    depends_on:
-      - mariadb
-      - wordpress
-    links:
-    - mariadb:mysql
-    volumes:
-    - wordpress-data:/var/www/html
+   wordpress:
+     depends_on:
+       - db
+     image: wordpress:latest
+     ports:
+       - "8000:80"
+     restart: always
+     environment:
+       WORDPRESS_DB_HOST: db:3306
+       WORDPRESS_DB_USER: wordpress
+       WORDPRESS_DB_PASSWORD: wordpress
+       WORDPRESS_DB_NAME: wordpress
+volumes:
+    db_data: {}
